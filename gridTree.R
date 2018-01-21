@@ -1,4 +1,5 @@
 # library(grid)
+# library(tree)
 
 grid.leaf <- function(fill = NULL) {
   
@@ -18,6 +19,15 @@ grid.branch <- function(var = NULL,
   grid.line.to(x=1,y=0)
   grid.move.to(x=0.5,y=1)
   grid.line.to(x=1,y=1)
+  
+  grid.branch.annotate()
+}
+
+grid.branch.annotate <- function() {
+  
+  grid.text("High", x=0.5, y=0.9)
+  grid.text("Low", x=0.5, y=0.1)
+  grid.text("Variable", x=0.5,y=0.5)
 }
 
 grid.tree <- function(tree.in) {
