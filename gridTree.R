@@ -25,9 +25,57 @@ grid.branch <- function(var = NULL,
 
 grid.branch.annotate <- function() {
   
-  grid.text("High", x=0.5, y=0.9)
-  grid.text("Low", x=0.5, y=0.1)
-  grid.text("Variable", x=0.5,y=0.5)
+  # Determine longest input string
+  string.list <- c("High", "Low", "Variable")
+  max.string <- string.list[nchar(string.list)==max(nchar(string.list))]
+  max.string = paste0(max.string, " ") # add margin
+  
+  # Layout to vertically align text
+  vplay <- grid.layout(1, 3,
+                       widths=unit(c(1, 1, 0.5),
+                                   c("null", "strwidth", "npc"),
+                                   list(NULL, max.string, NULL)))
+  
+  pushViewport(viewport(layout=vplay))
+  pushViewport(viewport(layout.pos.col=2))
+  
+  # Divide text column in half
+  vplay2 <- grid.layout(2, 1)
+  
+  pushViewport(viewport(layout=vplay2))
+  pushViewport(viewport(layout.pos.row=1))
+  
+  # Layout high bound and variable name in top half
+  vplay3 <- grid.layout(3, 1,
+                        heights=unit(c(1, 1, 1),
+                                     c("line", "null", "line")))
+  
+  pushViewport(viewport(layout=vplay3))
+  pushViewport(viewport(layout.pos.row=1))
+  
+  grid.text("High")
+  
+  popViewport()
+  pushViewport(viewport(layout.pos.row=3))
+  
+  grid.text("Variable")
+  
+  popViewport(3)
+  
+  pushViewport(viewport(layout.pos.row=2))
+  
+  # Layout low bound in bottom half
+  vplay4 <- grid.layout(2, 1,
+                        heights=unit(c(1,1),
+                                     c("null", "line")))
+  
+  pushViewport(viewport(layout=vplay4))
+  
+  pushViewport(viewport(layout.pos.row=2))
+  
+  grid.text("Low")
+  
+  popViewport(0)
 }
 
 grid.tree <- function(tree.in) {
