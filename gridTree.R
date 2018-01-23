@@ -3,7 +3,9 @@
 
 grid.leaf <- function(fill = NULL) {
   
-  grid.circle()
+  grid.move.to(x=0,y=0.5)
+  grid.line.to(x=0.5,y=0.5)
+  grid.circle(r=0.1, gp=gpar(fill=fill))
 }
 
 grid.branch <- function(var = NULL,
@@ -11,16 +13,25 @@ grid.branch <- function(var = NULL,
                         low.label= NULL) {
   
   grid.move.to(x=0,y=0.5)
-  grid.line.to(x=0.5,y=0.5)
-  grid.move.to(x=0.5,y=1)
-  grid.line.to(x=0.5,y=0)
+  grid.line.to(x=0.75,y=0.5)
+  grid.move.to(x=0.75,y=1)
+  grid.line.to(x=0.75,y=0)
   grid.line.to(x=1,y=0)
-  grid.move.to(x=0.5,y=1)
+  grid.move.to(x=0.75,y=1)
   grid.line.to(x=1,y=1)
   
   grid.branch.annotate(var.label = var,
                        high.label = high.label, 
                        low.label = low.label)
+}
+
+# Determine longest input string
+longest.string.length <- function(x, y, z) {
+  
+  string.list <- c(x, y, z)
+  max.string <- string.list[nchar(string.list)==max(nchar(string.list))]
+  max.string <- paste0(max.string, " ") # add margin
+  stringWidth(max.string)
 }
 
 grid.branch.annotate <- function(var.label,
@@ -40,13 +51,11 @@ grid.branch.annotate <- function(var.label,
                 "must be character"))
   
   # Determine longest input string
-  string.list <- c(var.label, high.label, low.label)
-  max.string <- string.list[nchar(string.list)==max(nchar(string.list))]
-  max.string = paste0(max.string, " ") # add margin
+  max.string <- longest.string(var.label, high.label, low.label)
   
   # Layout to vertically align text
   vplay <- grid.layout(1, 3,
-                       widths=unit(c(1, 1, 0.5),
+                       widths=unit(c(1, 1, 0.25),
                                    c("null", "strwidth", "npc"),
                                    list(NULL, max.string, NULL)))
   
@@ -67,7 +76,7 @@ grid.branch.annotate <- function(var.label,
   pushViewport(viewport(layout=vplay3))
   pushViewport(viewport(layout.pos.row=1))
   
-  grid.text(high.label)
+  grid.text(high.label, just="left")
   
   popViewport()
   pushViewport(viewport(layout.pos.row=3))
@@ -87,26 +96,10 @@ grid.branch.annotate <- function(var.label,
   
   pushViewport(viewport(layout.pos.row=2))
   
-  grid.text(low.label)
+  grid.text(low.label, just="left")
   
   popViewport(6)
 }
-
-# To layout
-# grid.grow <- function(var,
-#                       high.label,
-#                       low.label) {
-#   
-#   if (is.null(var))
-#     stop()
-#   else if (var == "<leaf>")
-#     grid.leaf()
-#   else
-#     grid.branch(var = var,
-#                 high.label = high.label,
-#                 low.label = low.label)
-#   
-# }
 
 get.node.details <- function(df, node=1) {
   
@@ -115,47 +108,67 @@ get.node.details <- function(df, node=1) {
        low.label = as.character(df[as.character(node), ]$cutleft))
 }
 
-grid.grow <- function(df, node=1, width) {
+resize.viewport <- function(vp, string.length) {
+  
+  currentvp.width <- convertWidth(current.viewport()$width,
+                                  "cm")
+  string.width <- convertWidth(string.length,
+                               "cm")
+  
+  if (currentvp.width < string.width)
+    vp$width <- string.length
+  
+  vp
+}
+
+grid.grow <- function(df, node=1,
+                      vp) {
+  
+  if (missing(vp)) {
+    vp <- viewport(x=unit(0.1, "npc"),
+                   y=unit(0.5, "npc"),
+                   width=unit(0.1, "npc"),
+                   height=unit(0.5,"npc"))
+  }
   
   node.details <- get.node.details(df=df, node=node)
+  
+  string.length <- longest.string.length(node.details$var,
+                                         node.details$high.label,
+                                         node.details$low.label)
+  
+  vp$width <- unit.pmax(vp$width, string.length*1.4) # empirically determined multiplier
+  
+  pushViewport(vp)
   
   if (is.na(node.details$var)) {
     invisible()
   }
   else if (node.details$var == "<leaf>") {
-    #pushViewport(vp)
     grid.leaf()
   }
   else {
-    #pushViewport(vp)
     grid.branch(var = node.details$var,
                 high.label = node.details$high.label,
                 low.label = node.details$low.label)
     
     currentvp <- current.viewport()
     
-    pushViewport(viewport(x = unit(1, "npc") + 0.5*width,
+    vp.down <- viewport(x = unit(1, "npc") + 0.5*currentvp$width,
                           y = unit(0, "npc"),
                           width = currentvp$width,
                           height = currentvp$height,
-                          name = "downChild"))
-    
-    grid.grow(df, node + 1, width=width)
+                          name = "downChild")
+    grid.grow(df, node + 1, vp=vp.down)
     popViewport()
-
-    pushViewport(viewport(x = unit(1, "npc") + 0.5*width,
+    
+    vp.up <- viewport(x = unit(1, "npc") + 0.5*currentvp$width,
                           y = unit(1, "npc"),
                           width = currentvp$width,
                           height = currentvp$height,
-                          name = "upChild"))
-    
-    grid.grow(df, node + 2, width=width)
+                          name = "upChild")
+    grid.grow(df, node + 2, vp=vp.up)
     popViewport()
-    # grid.grow(df, node + 2,
-    #           vp = viewport(x = currentvp$x + currentvp$width,
-    #                         y = currentvp$y + 0.5*currentvp$height,
-    #                         width = currentvp$width,
-    #                         height = 0.5*currentvp$height))
   }
 }
 
@@ -176,19 +189,6 @@ grid.tree <- function(tree.in,
   tree.df <- cbind(tree.df, tree.splits)
   
   pushViewport(vp)
-  
-  width <- current.viewport()$width
-  width <- 0.1*convertWidth(width, "cm")
-  
-  pushViewport(viewport(x=unit(0.05, "npc"), 
-                        width = width, 
-                        height=unit(0.5, "npc"),
-                        name = "trunk"))
-  
-  grid.grow(tree.df, width = width)
-  
-  popViewport(2)
-  # grid.grow(var = as.character(tree.df$var[2]),
-  #           high.label = as.character(tree.df$cutright[[2]]),
-  #           low.label = as.character(tree.df$cutleft[[2]]))
+  grid.grow(tree.df)
+  popViewport()
 }
