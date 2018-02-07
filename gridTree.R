@@ -1,6 +1,7 @@
 # library(grid)
 # library(tree)
 # library(dplyr)
+# library(colorspace)
 
 # User-called function
 grid.tree <- function(tree.in,
@@ -213,4 +214,20 @@ longest.string <- function(x, y, z) {
   string.list <- c(x, y, z)
   max.string <- string.list[nchar(string.list)==max(nchar(string.list))]
   paste0(max.string, " ") # add margin
+}
+
+create.color.scale <- function(yvals) {
+  
+  nval <- length(yvals)
+  
+  lims <- range(yvals)
+  
+  yvals.perc <- (yvals - yvals[1])/diff(lims)
+  
+  yvals_index <- floor(nval*yvals)
+  yvals_index[yvals_index == 0] <- NA_integer_
+  
+  cols <- sequential_hcl(nval)
+  
+  data.frame(yval = yvals, col = cols[yvals_index])
 }
