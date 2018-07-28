@@ -4,40 +4,40 @@
 # library(colorspace)
 
 # User-called function
-grid.tree <- function(tree.in,
+grid_tree <- function(tree_in,
                       vp = viewport(name = "treeCanvas",
                                     gp=gpar(fontsize=10)),
-                      color.by = NULL,
-                      new.page = TRUE) {
+                      color_by = NULL,
+                      new_page = TRUE) {
   
-  if(inherits(tree.in, "singlenode"))
+  if(inherits(tree_in, "singlenode"))
     stop("Cannot plot a single node tree")
-  if(!inherits(tree.in, "tree"))
+  if(!inherits(tree_in, "tree"))
     stop("First argument must be of class tree")
-  if(is.null(tree.in$frame))
+  if(is.null(tree_in$frame))
     stop("Tree data frame is null")
-  if(nrow(tree.in$frame) < 1)
+  if(nrow(tree_in$frame) < 1)
     stop("Tree data frame is empty")
   
-  tree.df <- tree.in$frame
-  tree.splits <- unlist(tree.df$splits)
-  tree.df <- cbind(tree.df, tree.splits)
+  tree_df <- tree_in$frame
+  tree_splits <- unlist(tree_df$splits)
+  tree_df <- cbind(tree_df, tree_splits)
   
-  if (is.numeric(tree.df$yval)) {
-    tree.df$yval <- round(tree.df$yval, digits=2)
+  if (is.numeric(tree_df$yval)) {
+    tree_df$yval <- round(tree_df$yval, digits=2)
   }
   
-  if (new.page) {
+  if (new_page) {
     grid.newpage()
   }
   
   pushViewport(vp)
-  grid.grow(tree.df)
+  grid_grow(tree_df)
   popViewport()
 }
 
 # Recursively build tree
-grid.grow <- function(df, node=1,
+grid_grow <- function(df, node=1,
                       vp) {
   
   if (missing(vp)) {
@@ -47,53 +47,53 @@ grid.grow <- function(df, node=1,
                    height=unit(0.5,"npc"))
   }
   
-  node.details <- get.node.details(df=df, node=node)
+  node_details <- get_node_details(df=df, node=node)
   
-  string.length <- longest.string.length(node.details$var,
-                                         node.details$high.label,
-                                         node.details$low.label)
-  string.height <- stringHeight(node.details$var)
+  string_length <- longest_string_length(node_details$var,
+                                         node_details$high_label,
+                                         node_details$low_label)
+  string_height <- stringHeight(node_details$var)
   
-  vp$width <- unit.pmax(vp$width, string.length*1.4) # empirically determined multiplier
-  vp$height <- unit.pmax(vp$height, string.height*6)
+  vp$width <- unit.pmax(vp$width, string_length*1.4) # empirically determined multiplier
+  vp$height <- unit.pmax(vp$height, string_height*6)
   
   pushViewport(vp)
   
-  if (is.na(node.details$var)) {
+  if (is.na(node_details$var)) {
     invisible()
   }
-  else if (node.details$var == "<leaf>") {
-    grid.leaf(yval=node.details$yval)
+  else if (node_details$var == "<leaf>") {
+    grid_leaf(yval=node_details$yval)
   }
   else {
-    grid.branch(var = node.details$var,
-                high.label = node.details$high.label,
-                low.label = node.details$low.label)
+    grid_branch(var = node_details$var,
+                high_label = node_details$high_label,
+                low_label = node_details$low_label)
     
     currentvp <- current.viewport()
     
-    vp.down <- viewport(x = unit(1, "npc") + 0.5*currentvp$width,
+    vp_down <- viewport(x = unit(1, "npc") + 0.5*currentvp$width,
                         y = unit(0, "npc"),
                         width = currentvp$width,
                         height = currentvp$height,
                         gp=gpar(),
                         name = "downChild")
-    grid.grow(df, node*2, vp=vp.down)
+    grid_grow(df, node*2, vp=vp_down)
     popViewport()
     
-    vp.up <- viewport(x = unit(1, "npc") + 0.5*currentvp$width,
+    vp_up <- viewport(x = unit(1, "npc") + 0.5*currentvp$width,
                       y = unit(1, "npc"),
                       width = currentvp$width,
                       height = currentvp$height,
                       gp=gpar(),
                       name = "upChild")
-    grid.grow(df, node*2+1, vp=vp.up)
+    grid_grow(df, node*2+1, vp=vp_up)
     popViewport()
   }
 }
 
 # Create terminal node
-grid.leaf <- function(fill = "white",
+grid_leaf <- function(fill = "white",
                       yval = NULL) {
   
   grid.move.to(x=0,y=0.5)
@@ -103,9 +103,9 @@ grid.leaf <- function(fill = "white",
 }
 
 # Create non-terminal node
-grid.branch <- function(var = NULL,
-                        high.label = NULL, 
-                        low.label= NULL) {
+grid_branch <- function(var = NULL,
+                        high_label = NULL, 
+                        low_label= NULL) {
   
   grid.move.to(x=0,y=0.5)
   grid.line.to(x=0.75,y=0.5)
@@ -115,36 +115,36 @@ grid.branch <- function(var = NULL,
   grid.move.to(x=0.75,y=1)
   grid.line.to(x=1,y=1)
   
-  grid.branch.annotate(var.label = var,
-                       high.label = high.label, 
-                       low.label = low.label)
+  grid_branch_annotate(var_label = var,
+                       high_label = high_label, 
+                       low_label = low_label)
 }
 
 # Annotate non-terminal node
-grid.branch.annotate <- function(var.label,
-                                 high.label,
-                                 low.label) {
+grid_branch_annotate <- function(var_label,
+                                 high_label,
+                                 low_label) {
   
   # Perform arg check
-  if (missing(var.label))
+  if (missing(var_label))
     stop("Variable label missing")
-  if (!is.character(var.label))
+  if (!is.character(var_label))
     stop("Variable label must be a character")
-  if (!is.character(high.label))
-    stop(paste0("High label for", var.label,
+  if (!is.character(high_label))
+    stop(paste0("High label for", var_label,
                 "must be a character"))
-  if(!is.character(low.label))
-    stop(paste0("Low label for", var.label,
+  if(!is.character(low_label))
+    stop(paste0("Low label for", var_label,
                 "must be character"))
   
   # Determine longest input string
-  max.string <- longest.string(var.label, high.label, low.label)
+  max_string <- longest_string(var_label, high_label, low_label)
   
   # Layout to vertically align text
   vplay <- grid.layout(1, 3,
                        widths=unit(c(1, 1, 0.25),
                                    c("null", "strwidth", "npc"),
-                                   list(NULL, max.string, NULL)))
+                                   list(NULL, max_string, NULL)))
   
   pushViewport(viewport(layout=vplay, name = "top"))
   pushViewport(viewport(layout.pos.col=2))
@@ -163,12 +163,12 @@ grid.branch.annotate <- function(var.label,
   pushViewport(viewport(layout=vplay3))
   pushViewport(viewport(layout.pos.row=1))
   
-  grid.text(high.label, just="left")
+  grid.text(high_label, just="left")
   
   popViewport()
   pushViewport(viewport(layout.pos.row=3))
   
-  grid.text(var.label)
+  grid.text(var_label)
   
   popViewport(3)
   
@@ -183,46 +183,46 @@ grid.branch.annotate <- function(var.label,
   
   pushViewport(viewport(layout.pos.row=2))
   
-  grid.text(low.label, just="left")
+  grid.text(low_label, just="left")
   
   popViewport(6)
 }
 
 # Get critical node parameters
-get.node.details <- function(df, node=1) {
+get_node_details <- function(df, node=1) {
   
   list(var = as.character(df[as.character(node), ]$var),
-       high.label = as.character(df[as.character(node), ]$cutright),
-       low.label = as.character(df[as.character(node), ]$cutleft),
+       high_label = as.character(df[as.character(node), ]$cutright),
+       low_label = as.character(df[as.character(node), ]$cutleft),
        yval = as.character(df[as.character(node), ]$yval))
 }
 
 # Determine length of longest input string
-longest.string.length <- function(x, y, z) {
+longest_string_length <- function(x, y, z) {
   
-  string.list <- c(x, y, z)
-  max.string <- string.list[nchar(string.list)==max(nchar(string.list))]
-  if (length(max.string) > 1) {
-    max.string = max.string[[1]]
+  string_list <- c(x, y, z)
+  max_string <- string_list[nchar(string_list)==max(nchar(string_list))]
+  if (length(max_string) > 1) {
+    max_string = max_string[[1]]
   }
-  max.string <- paste0(max.string, " ") # add margin
-  stringWidth(max.string)
+  max_string <- paste0(max_string, " ") # add margin
+  stringWidth(max_string)
 }
 
 # Determine longest input string
-longest.string <- function(x, y, z) {
-  string.list <- c(x, y, z)
-  max.string <- string.list[nchar(string.list)==max(nchar(string.list))]
-  paste0(max.string, " ") # add margin
+longest_string <- function(x, y, z) {
+  string_list <- c(x, y, z)
+  max_string <- string_list[nchar(string_list)==max(nchar(string_list))]
+  paste0(max_string, " ") # add margin
 }
 
-create.color.scale <- function(yvals) {
+create_color_scale <- function(yvals) {
   
   nval <- length(yvals)
   
   lims <- range(yvals)
   
-  yvals.perc <- (yvals - yvals[1])/diff(lims)
+  yvals_perc <- (yvals - yvals[1])/diff(lims)
   
   yvals_index <- floor(nval*yvals)
   yvals_index[yvals_index == 0] <- NA_integer_
